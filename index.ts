@@ -5,6 +5,15 @@ class SistemaCobrancaStripe {
     }
 }
 
+// 1.1 Serviço dedicado à cobrança
+class ServicoCobranca {
+    constructor(private sistemaCobranca: SistemaCobrancaStripe) {}
+
+    registrarCobranca(usuarioId: string, valor: number): void {
+        this.sistemaCobranca.cobrar(usuarioId, valor);
+    }
+}
+
 // 2. Interface "Faz-Tudo"
 interface IModelosIA {
     gerarTexto(prompt: string): string;
@@ -16,7 +25,10 @@ interface IModelosIA {
 class AssistenteOmniIA implements IModelosIA {
     public nomeModelo: string;
 
-    constructor(nomeModelo: string) {
+    constructor(
+        nomeModelo: string,
+        private servicoCobranca: ServicoCobranca
+    ) {
         this.nomeModelo = nomeModelo;
     }
 
@@ -34,8 +46,7 @@ class AssistenteOmniIA implements IModelosIA {
             throw new Error("Tipo de IA não suportado pelo sistema.");
         }
        
-        // Finaliza cobrando o usuário direto aqui
-        this.registrarCobranca(1.50);
+        this.servicoCobranca.registrarCobranca("user_999", 1.50);
     }
 
     gerarTexto(prompt: string): string {
@@ -50,16 +61,12 @@ class AssistenteOmniIA implements IModelosIA {
         return `[Áudio Gerado]: Arquivo de voz para: ${prompt}`;
     }
 
-    registrarCobranca(valor: number): void {
-        const stripe = new SistemaCobrancaStripe();
-        stripe.cobrar("user_999", valor);
-    }
 }
 
 // 4. Um modelo específico sendo forçado a herdar o que não deve
 class ModeloFocadoEmTexto extends AssistenteOmniIA {
-    constructor() {
-        super("ChatGPT-4");
+    constructor(servicoCobranca: ServicoCobranca) {
+        super("ChatGPT-4", servicoCobranca);
     }
 
     gerarImagem(prompt: string): string {
