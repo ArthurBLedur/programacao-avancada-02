@@ -73,10 +73,10 @@ class AssistenteOmniIA {
     }
 }
 
-// 4. Um modelo específico escolhe apenas as capacidades que possui
-class ModeloFocadoEmTexto extends AssistenteOmniIA {
-    constructor(servicoCobranca: ServicoCobranca) {
-        super("ChatGPT-4", servicoCobranca, [
+// 4. Um modelo específico configura um assistente com as capacidades que possui
+class ModeloFocadoEmTexto {
+    criarAssistente(servicoCobranca: ServicoCobranca): AssistenteOmniIA {
+        return new AssistenteOmniIA("ChatGPT-4", servicoCobranca, [
             new GeradorTexto()
         ]);
     }
