@@ -14,60 +14,86 @@ class ServicoCobranca {
     }
 }
 
-// 2. Contrato para cada tipo de geração de IA
-interface IGeradorIA {
+// 2. Interfaces pequenas para cada capacidade de IA
+interface IProcessadorRequisicaoIA {
     tipo: string;
-    gerar(prompt: string): string;
+    processar(prompt: string): string;
 }
 
-class GeradorTexto implements IGeradorIA {
+interface IGeradorTexto {
+    gerarTexto(prompt: string): string;
+}
+
+interface IGeradorImagem {
+    gerarImagem(prompt: string): string;
+}
+
+interface IGeradorAudio {
+    gerarAudio(prompt: string): string;
+}
+
+class GeradorTexto implements IGeradorTexto, IProcessadorRequisicaoIA {
     tipo = "TEXTO";
 
-    gerar(prompt: string): string {
+    gerarTexto(prompt: string): string {
         return `[Texto Gerado]: Respondendo ao prompt: ${prompt}`;
     }
-}
 
-class GeradorImagem implements IGeradorIA {
-    tipo = "IMAGEM";
-
-    gerar(prompt: string): string {
-        return `[Imagem Gerada]: URL da imagem baseada em: ${prompt}`;
+    processar(prompt: string): string {
+        return this.gerarTexto(prompt);
     }
 }
 
-class GeradorAudio implements IGeradorIA {
+class GeradorImagem implements IGeradorImagem, IProcessadorRequisicaoIA {
+    tipo = "IMAGEM";
+
+    gerarImagem(prompt: string): string {
+        return `[Imagem Gerada]: URL da imagem baseada em: ${prompt}`;
+    }
+
+    processar(prompt: string): string {
+        return this.gerarImagem(prompt);
+    }
+}
+
+class GeradorAudio implements IGeradorAudio, IProcessadorRequisicaoIA {
     tipo = "AUDIO";
 
-    gerar(prompt: string): string {
+    gerarAudio(prompt: string): string {
         return `[Áudio Gerado]: Arquivo de voz para: ${prompt}`;
+    }
+
+    processar(prompt: string): string {
+        return this.gerarAudio(prompt);
     }
 }
 
 // 3. A classe principal que gerencia tudo
 class AssistenteOmniIA {
     public nomeModelo: string;
-    private geradores: Map<string, IGeradorIA>;
+    private processadores: Map<string, IProcessadorRequisicaoIA>;
 
     constructor(
         nomeModelo: string,
         private servicoCobranca: ServicoCobranca,
-        geradores: IGeradorIA[]
+        processadores: IProcessadorRequisicaoIA[]
     ) {
         this.nomeModelo = nomeModelo;
-        this.geradores = new Map(geradores.map((gerador) => [gerador.tipo, gerador]));
+        this.processadores = new Map(
+            processadores.map((processador) => [processador.tipo, processador])
+        );
     }
 
     processarRequisicaoUsuario(prompt: string, tipo: string): void {
         console.log(`Iniciando processamento com ${this.nomeModelo}...`);
 
-        const gerador = this.geradores.get(tipo);
+        const processador = this.processadores.get(tipo);
 
-        if (!gerador) {
+        if (!processador) {
             throw new Error("Tipo de IA não suportado pelo sistema.");
         }
 
-        gerador.gerar(prompt);
+        processador.processar(prompt);
        
         this.servicoCobranca.registrarCobranca("user_999", 1.50);
     }
