@@ -18,7 +18,11 @@ class SistemaCobrancaPix implements IProvedorPagamento {
 
 // 1.2 Serviço dedicado à cobrança
 class ServicoCobranca {
-    constructor(private provedorPagamento: IProvedorPagamento) {}
+    private provedorPagamento: IProvedorPagamento;
+
+    constructor(provedorPagamento: IProvedorPagamento) {
+        this.provedorPagamento = provedorPagamento;
+    }
 
     registrarCobranca(usuarioId: string, valor: number): void {
         this.provedorPagamento.cobrar(usuarioId, valor);
@@ -83,13 +87,15 @@ class GeradorAudio implements IGeradorAudio, IProcessadorRequisicaoIA {
 class AssistenteOmniIA {
     public nomeModelo: string;
     private processadores: Map<string, IProcessadorRequisicaoIA>;
+    private servicoCobranca: ServicoCobranca;
 
     constructor(
         nomeModelo: string,
-        private servicoCobranca: ServicoCobranca,
+        servicoCobranca: ServicoCobranca,
         processadores: IProcessadorRequisicaoIA[]
     ) {
         this.nomeModelo = nomeModelo;
+        this.servicoCobranca = servicoCobranca;
         this.processadores = new Map(
             processadores.map((processador) => [processador.tipo, processador])
         );
@@ -137,3 +143,22 @@ dividida em contratos menores: IGeradorTexto, IGeradorImagem e IGeradorAudio.
 DIP: ServicoCobranca depende da abstração IProvedorPagamento, permitindo trocar
 Stripe por Pix, PayPal ou outro provedor sem alterar a regra de cobrança.
 */
+
+// Exemplo de uso com um assistente omni usando Stripe
+const cobrancaStripe = new ServicoCobranca(new SistemaCobrancaStripe());
+
+const assistenteOmni = new AssistenteOmniIA("OmniGPT", cobrancaStripe, [
+    new GeradorTexto(),
+    new GeradorImagem(),
+    new GeradorAudio()
+]);
+
+assistenteOmni.processarRequisicaoUsuario("Explique SOLID em poucas palavras", "TEXTO");
+assistenteOmni.processarRequisicaoUsuario("Crie uma imagem futurista", "IMAGEM");
+
+// Exemplo de troca de provedor de pagamento sem alterar ServicoCobranca
+const cobrancaPix = new ServicoCobranca(new SistemaCobrancaPix());
+const modeloTexto = new ModeloFocadoEmTexto();
+const assistenteTexto = modeloTexto.criarAssistente(cobrancaPix);
+
+assistenteTexto.processarRequisicaoUsuario("Escreva uma resposta apenas em texto", "TEXTO");
