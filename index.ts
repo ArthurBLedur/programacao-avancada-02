@@ -118,3 +118,22 @@ class ModeloFocadoEmTexto {
         ]);
     }
 }
+
+/*
+Justificativas arquiteturais:
+
+SRP: A cobrança foi isolada em ServicoCobranca, deixando AssistenteOmniIA focada
+em processar requisições de IA.
+
+OCP: Novos tipos de geração podem ser adicionados criando novos processadores que
+implementam IProcessadorRequisicaoIA, sem alterar AssistenteOmniIA.
+
+LSP: ModeloFocadoEmTexto deixou de herdar de AssistenteOmniIA, pois um modelo
+apenas textual não deve substituir um assistente omni e quebrar expectativas.
+
+ISP: A antiga ideia de uma interface única para texto, imagem e áudio foi
+dividida em contratos menores: IGeradorTexto, IGeradorImagem e IGeradorAudio.
+
+DIP: ServicoCobranca depende da abstração IProvedorPagamento, permitindo trocar
+Stripe por Pix, PayPal ou outro provedor sem alterar a regra de cobrança.
+*/
